@@ -1,4 +1,4 @@
-load("//:build_defs.bzl", "generate_nodeset")
+load("//:build_defs.bzl", "generate_config_h", "generate_nodeset")
 
 cc_library(
     name = "open62541",
@@ -110,6 +110,8 @@ cc_library(
         "include/open62541/client_highlevel.h",
         "include/open62541/client_subscriptions.h",
         "include/open62541/client_highlevel_async.h",
+        ":config_h",
+        ":namespace0",
     ],
     includes = ["include"],
 )
@@ -155,5 +157,11 @@ generate_nodeset(
     # ignore ${PROJECT_SOURCE_DIR}/tools/nodeset_compiler/NodeID_NS0_Base.tx
     ignore = "tools/nodeset_compiler/NodeID_NS0_Base.txt",
     internal = True,
+    prefix = "include/open62541",
     #
+)
+
+generate_config_h(
+    name = "config_h",
+    output_path = "include/open62541/config.h",
 )
