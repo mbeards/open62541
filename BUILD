@@ -139,15 +139,16 @@ py_binary(
 )
 
 generate_nodeset(
-    name = "gen_ns0",
+    name = "namespace0",
     files = [
-        #"tools/schema/Opc.Ua.NodeSet2.DiagnosticsMinimal.xml",
-        #"tools/schema/Opc.Ua.NodeSet2.EventsMinimal.xml",
-        #"tools/schema/Opc.Ua.NodeSet2.HistorizingMinimal.xml",
+        # this is ordering dependent! ffs...
+        "tools/schema/Opc.Ua.NodeSet2.Reduced.xml",  # is this one right? this was UA_FILE_NS0
+        "tools/schema/Opc.Ua.NodeSet2.DiagnosticsMinimal.xml",
+        "tools/schema/Opc.Ua.NodeSet2.EventsMinimal.xml",
+        "tools/schema/Opc.Ua.NodeSet2.HistorizingMinimal.xml",
         "tools/schema/Opc.Ua.NodeSet2.PubSubMinimal.xml",
-        #"tools/schema/Opc.Ua.NodeSet2.Part8_Subset.xml",
+        "tools/schema/Opc.Ua.NodeSet2.Part8_Subset.xml",
         # oof there's a submodule involved here... Need to recheck
-        #"tools/schema/Opc.Ua.NodeSet2.Reduced.xml",  # is this one right? this was UA_FILE_NS0
     ],
     # file ${UA_FILE_NODESETS}
     # blacklist ${UA_FILE_NS0_BLACKLIST} #mpty!
