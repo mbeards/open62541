@@ -2,22 +2,27 @@
 
 def _generate_nodeset_impl(ctx):
     gen_args = ctx.actions.args()
-    if ctx.file.blacklist:
-        gen_args.add("--blacklist", ctx.file.blacklist.path)
+    if ctx.attr.internal:
+        gen_args.add("--internal-headers")
 
     if ctx.file.ignore:
         gen_args.add("--ignore", ctx.file.ignore.path)
 
-    if ctx.attr.internal:
-        gen_args.add("--internal-headers")
+    if ctx.file.blacklist:
+        gen_args.add("--blacklist", ctx.file.blacklist.path)
 
     # compute file suffix
-    file_suffix = "_" + ctx.label.name + "_generated"
+    file_suffix = ctx.label.name + "_generated"
     c_out = ctx.actions.declare_file(file_suffix + ".c")
     h_out = ctx.actions.declare_file(file_suffix + ".h")
 
     gen_args.add_all(ctx.files.files, format_each = "--xml=%s")
-    gen_args.add(c_out.dirname + file_suffix)
+    gen_args.add("-v")
+    gen_args.add("-v")
+    gen_args.add("-v")
+
+    #gen_args.add("-v")
+    gen_args.add(c_out.dirname + "/" + file_suffix)
 
     all_inputs = depset(ctx.files.files + [ctx.file.ignore])
 
