@@ -1,5 +1,7 @@
 """TODO(beardsworth): Write module docstring."""
 
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+
 def _generate_nodeset_impl(ctx):
     gen_args = ctx.actions.args()
     if ctx.attr.internal:
@@ -83,10 +85,14 @@ def _generate_config_h_impl(ctx):
     defines = [
         "UA_ENABLE_METHODCALLS",
         "UA_ENABLE_PUBSUB",
+        "UA_ENABLE_SUBSCRIPTIONS_EVENTS",
         "UA_ENABLE_SUBSCRIPTIONS",
+        "UA_ENABLE_DISCOVERY_SEMAPHORE",
+        "UA_ENABLE_DISCOVERY",
     ]
 
     undefines = [
+        "UA_ENABLE_DISCOVERY_MULTICAST",
         "UA_ENABLE_AMALGAMATION",
         "UA_DEBUG",
         "UA_DEBUG_DUMP_PKGS",
@@ -113,7 +119,6 @@ def _generate_config_h_impl(ctx):
         "UA_ENABLE_TPM2_SECURITY",
         "UA_ENABLE_ENCRYPTION_OPENSSL",
         "UA_ENABLE_ENCRYPTION_LIBRESSL",
-        "UA_ENABLE_SUBSCRIPTIONS_EVENTS",
         "UA_ENABLE_SUBSCRIPTIONS_ALARMS_CONDITIONS",
         "UA_ENABLE_IMMUTABLE_NODES",
         "UA_ENABLE_STATUSCODE_DESCRIPTIONS",
@@ -121,9 +126,6 @@ def _generate_config_h_impl(ctx):
         "UA_ENABLE_INLINABLE_EXPORT",
         "UA_ENABLE_NODESET_COMPILER_DESCRIPTIONS",
         "UA_ENABLE_DETERMINISTIC_RNG",
-        "UA_ENABLE_DISCOVERY_MULTICAST",
-        "UA_ENABLE_DISCOVERY_SEMAPHORE",
-        "UA_ENABLE_DISCOVERY",
         "UA_ENABLE_QUERY",
         "UA_ENABLE_MALLOC_SINGLETON",
         "UA_GENERATED_NAMESPACE_ZERO_FULL",
@@ -150,4 +152,101 @@ generate_config_h = rule(
         "_template_file": attr.label(allow_single_file = True, default = "//:include/open62541/config.h.in"),
         "output_path": attr.string(),
     },
+)
+
+def _generate_datatypes_impl(ctx):
+    file_suffix = ctx.label.name + "_generated"
+    #print(ctx.attr.prefix)
+    #print("fs", file_suffix)
+    #c_out = ctx.actions.declare_file(ctx.attr.prefix + "/" + file_suffix + ".c")
+    #h_out = ctx.actions.declare_file(ctx.attr.prefix + "/" + file_suffix + ".h")
+
+    c_file = ctx.actions.declare_file(ctx.attr.prefix + "/" + file_suffix + ".c")
+    h_file = ctx.actions.declare_file(ctx.attr.prefix + "/" + file_suffix + ".h")
+
+    #if ctx.attr.gen_doc:
+    #    doc_file = ctx.actions.declare_file("foo.rst")
+
+    all_inputs = ctx.files.files_bsd + [ctx.file.file_csv]
+    if ctx.file.files_selected:
+        all_inputs += [ctx.file.files_selected]
+
+    gen_args = ctx.actions.args()
+    if not ctx.attr.builtin:
+        gen_args.add("--no-builtin")
+
+    if ctx.attr.gen_doc:
+        gen_args.add("--gen-doc")
+
+    # --internal
+    gen_args.add_all(ctx.files.files_bsd, format_each = "--type-bsd=%s")
+
+    gen_args.add("--type-csv=%s" % ctx.file.file_csv.path)
+
+    #gen_args.add(c_file.dirname + "/" + file_suffix)
+    gen_args.add(c_file.dirname + "/" + ctx.label.name)  # wrong?
+
+    #all_inputs = depset(ctx.files.files_bsd + [ctx.file.file_csv, ctx.file.files_selected])
+
+    print(gen_args)
+    ctx.actions.run(
+        executable = ctx.executable._generate_datatypes,
+        outputs = [c_file, h_file],
+        inputs = depset(all_inputs),
+        arguments = [gen_args],
+    )
+
+    cc_toolchain = find_cpp_toolchain(ctx)
+    feature_configuration = cc_common.configure_features(
+        ctx = ctx,
+        cc_toolchain = cc_toolchain,
+        requested_features = ctx.features,
+        unsupported_features = ctx.disabled_features,
+    )
+    (compilation_context, compilation_outputs) = cc_common.compile(
+        name = ctx.label.name,
+        actions = ctx.actions,
+        feature_configuration = feature_configuration,
+        cc_toolchain = cc_toolchain,
+        srcs = [c_file],
+        public_hdrs = [h_file, ctx.file._types_hdr, ctx.file._statuscodes_hdr],
+        compilation_contexts = [ctx.attr._common_lib[CcInfo].compilation_context] + [dep[CcInfo].compilation_context for dep in ctx.attr.deps],
+    )
+
+    (linking_context, _linking_outputs) = cc_common.create_linking_context_from_compilation_outputs(
+        name = ctx.label.name,
+        actions = ctx.actions,
+        feature_configuration = feature_configuration,
+        cc_toolchain = cc_toolchain,
+        compilation_outputs = compilation_outputs,
+        linking_contexts = [ctx.attr._common_lib[CcInfo].linking_context] + [dep[CcInfo].linking_context for dep in ctx.attr.deps],
+    )
+
+    return [
+        DefaultInfo(files = depset([c_file, h_file])),
+        CcInfo(compilation_context = compilation_context, linking_context = linking_context),
+    ]
+
+generate_datatypes = rule(
+    implementation = _generate_datatypes_impl,
+    attrs = {
+        "builtin": attr.bool(),
+        "gen_doc": attr.bool(),
+        # name is implicit
+        "target_suffix": attr.string(),
+        # namespace_idx isn't documented?
+        "file_csv": attr.label(allow_single_file = True),
+        "files_bsd": attr.label_list(allow_files = True),
+        "files_selected": attr.label(allow_single_file = True),
+        "prefix": attr.string(),
+        #"deps": attr.label_list(providers = ["CcInfo"]),
+        "deps": attr.label_list(),
+        "_generate_datatypes": attr.label(executable = True, default = "//:generate_datatypes", cfg = "exec"),
+        "_cc_toolchain": attr.label(default = "@bazel_tools//tools/cpp:current_cc_toolchain"),
+        "_common_lib": attr.label(default = "//:common"),
+        "_types_hdr": attr.label(allow_single_file = True, default = "//:include/open62541/types.h"),
+        "_statuscodes_hdr": attr.label(allow_single_file = True, default = "//:include/open62541/statuscodes.h"),
+    },
+    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+    fragments = ["cpp"],
 )
