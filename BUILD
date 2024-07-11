@@ -1,23 +1,16 @@
-load("//:build_defs.bzl", "generate_config_h", "generate_nodeset")
+load("//:build_defs.bzl", "generate_config_h", "generate_datatypes", "generate_nodeset")
 
 cc_library(
     name = "open62541",
     srcs = [
         # Main Library
         #${PROJECT_BINARY_DIR}/src_generated/open62541/transport_generated.h
-        "deps/open62541_queue.h",
-        "deps/pcg_basic.h",
-        "deps/libc_time.h",
-        "deps/base64.h",
-        "deps/dtoa.h",
-        "deps/mp_printf.h",
-        "deps/itoa.h",
-        "deps/ziptree.h",
         "src/ua_types_encoding_binary.h",
         "src/util/ua_util_internal.h",
         "src/ua_securechannel.h",
         "src/server/ua_session.h",
         "src/server/ua_subscription.h",
+        "src/server/ua_discovery.h",
         "src/pubsub/ua_pubsub_networkmessage.h",
         "src/pubsub/ua_pubsub.h",
         "src/pubsub/ua_pubsub_ns0.h",
@@ -26,6 +19,7 @@ cc_library(
         "src/server/ua_server_async.h",
         "src/server/ua_server_internal.h",
         "src/client/ua_client_internal.h",
+        "arch/clock.c",
     ] + [
         #${PROJECT_BINARY_DIR}/src_generated/open62541/types_generated.c
         #${PROJECT_BINARY_DIR}/src_generated/open62541/transport_generated.c
@@ -38,6 +32,7 @@ cc_library(
     ] + [
         # server
         "src/server/ua_session.c",
+        "src/server/ua_discovery.c",
         "src/server/ua_nodes.c",
         "src/server/ua_server.c",
         "src/server/ua_server_ns0.c",
@@ -52,6 +47,11 @@ cc_library(
         "src/server/ua_services_session.c",
         "src/server/ua_services_attribute.c",
         "src/server/ua_services_discovery.c",
+        "src/server/ua_subscription.c",
+        "src/server/ua_subscription_eventfilter.c",
+        "plugins/crypto/ua_securitypolicy_none.c",
+        "plugins/crypto/ua_certificategroup_none.c",
+        "src/server/ua_subscription_datachange.c",
         "src/server/ua_services_subscription.c",
         "src/server/ua_services_monitoreditem.c",
         "src/server/ua_services_securechannel.c",
@@ -79,14 +79,11 @@ cc_library(
         "src/client/ua_client_highlevel.c",
         "src/client/ua_client_subscriptions.c",
     ] + [
-        # dependencies
-        "deps/libc_time.c",
-        "deps/pcg_basic.c",
-        "deps/base64.c",
-        "deps/dtoa.c",
-        "deps/mp_printf.c",
-        "deps/itoa.c",
-        "deps/ziptree.c",
+        ":include/open62541/statuscodes.c",
+        #":include/open62541/types_generated.c",
+        #":include/open62541/transport_generated.c",
+        #${PROJECT_BINARY_DIR}/src_generated/open62541/types_generated.c
+        #${PROJECT_BINARY_DIR}/src_generated/open62541/transport_generated.c
     ],
     hdrs = [
         #${PROJECT_BINARY_DIR}/src_generated/open62541/config.h
@@ -103,6 +100,9 @@ cc_library(
         "include/open62541/plugin/eventloop.h",
         "include/open62541/plugin/nodestore.h",
         "include/open62541/plugin/historydatabase.h",
+        "plugins/include/open62541/client_config_default.h",
+        "plugins/include/open62541/plugin/securitypolicy_default.h",
+        "plugins/include/open62541/plugin/certificategroup_default.h",
         "include/open62541/server_pubsub.h",
         "include/open62541/pubsub.h",
         "include/open62541/client.h",
@@ -112,6 +112,122 @@ cc_library(
         "include/open62541/client_highlevel_async.h",
         ":config_h",
         ":namespace0",
+        #":types",
+        #":transport",
+        #":include/open62541/nodeids.h",
+        ":nodeid_header",
+        ":include/open62541/statuscodes.h",
+    ],
+    copts = [
+        "-Isrc/util",
+        "-Isrc/server",
+        "-Isrc",
+        "-Ideps",
+        "-Isrc/pubsub",
+        "-Iplugins/include",
+        "-Wno-unused-variable",
+    ],
+    includes = ["include"],
+    deps = [
+        ":base64",
+        ":cj5",
+        ":dtoa",
+        ":itoa",
+        ":libc_time",
+        ":mp_printf",
+        ":open62541_queue",
+        ":parse_num",
+        ":pcg_basic",
+        ":transport",
+        ":types",
+        ":ziptree",
+    ],
+)
+
+cc_library(
+    name = "ziptree",
+    srcs = ["deps/ziptree.c"],
+    hdrs = ["deps/ziptree.h"],
+    includes = ["deps"],
+)
+
+cc_library(
+    name = "pcg_basic",
+    srcs = ["deps/pcg_basic.c"],
+    hdrs = ["deps/pcg_basic.h"],
+    includes = ["deps"],
+)
+
+cc_library(
+    name = "libc_time",
+    srcs = ["deps/libc_time.c"],
+    hdrs = ["deps/libc_time.h"],
+    includes = ["deps"],
+)
+
+cc_library(
+    name = "parse_num",
+    srcs = ["deps/parse_num.c"],
+    hdrs = ["deps/parse_num.h"],
+    includes = ["deps"],
+)
+
+cc_library(
+    name = "base64",
+    srcs = ["deps/base64.c"],
+    hdrs = ["deps/base64.h"],
+    includes = ["deps"],
+    deps = [
+        ":types",
+    ],
+)
+
+cc_library(
+    name = "cj5",
+    srcs = ["deps/cj5.c"],
+    hdrs = ["deps/cj5.h"],
+    includes = ["deps"],
+    deps = [
+        ":parse_num",
+    ],
+)
+
+cc_library(
+    name = "dtoa",
+    srcs = ["deps/dtoa.c"],
+    hdrs = ["deps/dtoa.h"],
+    includes = ["deps"],
+)
+
+cc_library(
+    name = "itoa",
+    srcs = ["deps/itoa.c"],
+    hdrs = ["deps/itoa.h"],
+    includes = ["deps"],
+    deps = [":types"],
+)
+
+cc_library(
+    name = "open62541_queue",
+    hdrs = ["deps/open62541_queue.h"],
+)
+
+cc_library(
+    name = "mp_printf",
+    srcs = ["deps/mp_printf.c"],
+    hdrs = ["deps/mp_printf.h"],
+    includes = ["deps"],
+    deps = [":dtoa"],
+)
+
+#"deps/mp_printf.h",
+
+cc_library(
+    name = "common",
+    hdrs = [
+        "include/open62541/common.h",
+        ":config_h",
+        ":include/open62541/nodeids.h",
     ],
     includes = ["include"],
 )
@@ -126,8 +242,8 @@ py_binary(
 genrule(
     name = "nodeid_header",
     srcs = ["tools/schema/NodeIds.csv"],
-    outs = ["nodeids.h"],  # DO NOT SUBMIT
-    cmd = "./$(location :generate_nodeid_header) $< $(RULEDIR)/nodeids NS0",
+    outs = ["include/open62541/nodeids.h"],  # DO NOT SUBMIT
+    cmd = "./$(location :generate_nodeid_header) $< $(RULEDIR)/include/open62541/nodeids NS0",
     tools = [":generate_nodeid_header"],
 )
 
@@ -164,4 +280,131 @@ generate_nodeset(
 generate_config_h(
     name = "config_h",
     output_path = "include/open62541/config.h",
+)
+
+py_binary(
+    name = "generate_datatypes",
+    #srcs = ["tools/generate_datatypes.py"],
+
+    # NO BUENO THIS IS A LIB!
+    srcs = [
+        "tools/generate_datatypes.py",
+        "tools/nodeset_compiler/__init__.py",
+        "tools/nodeset_compiler/backend_open62541_typedefinitions.py",
+        "tools/nodeset_compiler/opaque_type_mapping.py",
+        "tools/nodeset_compiler/type_parser.py",
+    ],
+    #srcs = glob(["tools/nodeset_compiler/*.py"]) + ["tools/generate_datatypes.py"],
+    #imports = ["tools/nodeset_compiler"],
+    imports = ["tools"],
+    main = "tools/generate_datatypes.py",
+)
+
+generate_datatypes(
+    name = "types",
+    builtin = True,
+    file_csv = "tools/schema/NodeIds.csv",
+    files_bsd = ["tools/schema/Opc.Ua.Types.bsd"],
+    gen_doc = True,
+    prefix = "include/open62541",
+    target_suffix = "types",
+    #files_selected =  built with some complex per-feature stuff
+    # NAMESPACE_IDX 0
+)
+
+generate_datatypes(
+    name = "transport",
+    builtin = True,
+    file_csv = "tools/schema/NodeIds.csv",
+    files_bsd = ["tools/schema/Custom.Opc.Ua.Transport.bsd"],
+    # needs import!
+    files_selected = "tools/schema/datatypes_transport.txt",
+    gen_doc = True,
+    prefix = "include/open62541",
+    target_suffix = "transport",
+    # NAMESPACE_IDX 1
+    deps = [":types"],
+)
+
+py_binary(
+    name = "generate_statuscode_descriptions",
+    srcs = ["tools/generate_statuscode_descriptions.py"],
+)
+
+genrule(
+    name = "statuscodes",
+    srcs = ["tools/schema/StatusCode.csv"],
+    outs = [
+        "include/open62541/statuscodes.h",
+        "include/open62541/statuscodes.c",
+    ],
+    cmd = "./$(location :generate_statuscode_descriptions) $< $(RULEDIR)/include/open62541/statuscodes",
+    tools = [":generate_statuscode_descriptions"],
+)
+
+cc_test(
+    name = "check_chunking",
+    srcs = ["tests/check_chunking.c"],
+    includes = [
+        "deps",
+        "src",
+    ],
+    deps = [
+        ":open62541",
+        "@libcheck//:check",
+    ],
+)
+
+cc_test(
+    name = "check_cj5",
+    srcs = ["tests/check_cj5.c"],
+    includes = [
+        "deps",
+        "src",
+    ],
+    deps = [
+        ":cj5",
+        ":types",
+        "@libcheck//:check",
+    ],
+)
+
+cc_library(
+    name = "testing_clock",
+    srcs = [
+        "tests/testing-plugins/testing_clock.c",
+    ],
+    hdrs = [
+        "tests/testing-plugins/testing_clock.h",
+    ],
+    includes = ["tests/testing-plugins"],
+    deps = [
+        ":open62541",
+    ],
+)
+
+#cc_test(
+#    name = "check_eventloop",
+#    srcs = [
+#        "tests/check_eventloop.c",
+#    ],
+#    includes = [
+#        "deps",
+#        "src",
+#    ],
+#    deps = [
+#        ":open62541",
+#        ":testing_clock",
+#        "@libcheck//:check",
+#    ],
+#)
+
+cc_test(
+    name = "check_ziptree",
+    srcs = ["tests/check_ziptree.c"],
+    includes = ["deps"],
+    deps = [
+        ":ziptree",
+        "@libcheck//:check",
+    ],
 )
