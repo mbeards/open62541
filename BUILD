@@ -10,6 +10,7 @@ cc_library(
         "src/ua_securechannel.h",
         "src/server/ua_session.h",
         "src/server/ua_subscription.h",
+        "plugins/ua_log_stdout.c",
         "src/server/ua_discovery.h",
         "src/pubsub/ua_pubsub_networkmessage.h",
         "src/pubsub/ua_pubsub.h",
@@ -21,14 +22,11 @@ cc_library(
         "src/client/ua_client_internal.h",
         "arch/clock.c",
     ] + [
-        #${PROJECT_BINARY_DIR}/src_generated/open62541/types_generated.c
-        #${PROJECT_BINARY_DIR}/src_generated/open62541/transport_generated.c
-        #${PROJECT_BINARY_DIR}/src_generated/open62541/statuscodes.c
+        "src/ua_securechannel.c",
+        "src/ua_securechannel_crypto.c",
         "src/ua_types.c",
         "src/ua_types_encoding_binary.c",
         "src/util/ua_util.c",
-        "src/ua_securechannel.c",
-        "src/ua_securechannel_crypto.c",
     ] + [
         # server
         "src/server/ua_session.c",
@@ -79,17 +77,13 @@ cc_library(
         "src/client/ua_client_highlevel.c",
         "src/client/ua_client_subscriptions.c",
     ] + [
+        "plugins/include/open62541/plugin/create_certificate.h",
         ":include/open62541/statuscodes.c",
-        #":include/open62541/types_generated.c",
-        #":include/open62541/transport_generated.c",
-        #${PROJECT_BINARY_DIR}/src_generated/open62541/types_generated.c
-        #${PROJECT_BINARY_DIR}/src_generated/open62541/transport_generated.c
-    ],
+    ] + glob([
+        "plugins/crypto/openssl/*.c",
+        "plugins/crypto/openssl/*.h",
+    ]),
     hdrs = [
-        #${PROJECT_BINARY_DIR}/src_generated/open62541/config.h
-        #${PROJECT_BINARY_DIR}/src_generated/open62541/statuscodes.h
-        #${PROJECT_BINARY_DIR}/src_generated/open62541/nodeids.h
-        #${PROJECT_BINARY_DIR}/src_generated/open62541/types_generated.h
         "include/open62541/common.h",
         "include/open62541/types.h",
         "include/open62541/plugin/log.h",
@@ -117,6 +111,7 @@ cc_library(
         #":include/open62541/nodeids.h",
         ":nodeid_header",
         ":include/open62541/statuscodes.h",
+        "plugins/include/open62541/plugin/log_stdout.h",
     ],
     copts = [
         "-Isrc/util",
@@ -126,6 +121,7 @@ cc_library(
         "-Isrc/pubsub",
         "-Iplugins/include",
         "-Wno-unused-variable",
+        "-Wno-incompatible-pointer-types",  # type punning w/ boringssl?
     ],
     includes = ["include"],
     deps = [
@@ -141,6 +137,7 @@ cc_library(
         ":transport",
         ":types",
         ":ziptree",
+        "@boringssl//:crypto",
     ],
 )
 
@@ -229,6 +226,7 @@ cc_library(
         ":config_h",
         ":include/open62541/nodeids.h",
     ],
+    defines = ["HAVE_CONFIG_H"],
     includes = ["include"],
 )
 
@@ -383,16 +381,122 @@ cc_library(
     ],
 )
 
+# probably needs to collapse into main lib
+cc_library(
+    name = "eventloop_posix",
+    srcs = glob([
+        "arch/eventloop_posix/*.c",
+        "arch/eventloop_posix/*.h",
+    ]) + [
+        "arch/eventloop_common/eventloop_common.c",
+        "arch/eventloop_common/eventloop_common.h",
+        "arch/eventloop_common/timer.c",
+        "arch/eventloop_common/timer.h",
+    ],
+    hdrs = ["include/open62541/plugin/eventloop.h"],
+    deps = [
+        ":common",
+        ":open62541",
+        ":types",
+    ],
+)
+
+cc_test(
+    name = "check_eventloop",
+    srcs = [
+        "tests/check_eventloop.c",
+    ],
+    includes = [
+        "deps",
+        "src",
+    ],
+    deps = [
+        ":eventloop_posix",
+        ":open62541",
+        ":testing_clock",
+        "@libcheck//:check",
+    ],
+)
+
+cc_library(
+    name = "log_stdout",
+    srcs = [
+    ],
+    hdrs = [
+    ],
+    includes = ["plugins/include"],
+    deps = [
+        ":open62541",
+        ":types",
+    ],
+)
+
+cc_test(
+    name = "check_eventloop_interrupt",
+    srcs = [
+        "tests/check_eventloop_interrupt.c",
+    ],
+    includes = [
+        "deps",
+        "src",
+    ],
+    deps = [
+        ":eventloop_posix",
+        ":log_stdout",
+        ":open62541",
+        ":testing_clock",
+        "@libcheck//:check",
+    ],
+)
+
+cc_test(
+    name = "check_eventloop_tcp",
+    srcs = [
+        "tests/check_eventloop_tcp.c",
+    ],
+    includes = [
+        "deps",
+        "src",
+    ],
+    deps = [
+        ":eventloop_posix",
+        ":log_stdout",
+        ":open62541",
+        ":testing_clock",
+        "@libcheck//:check",
+    ],
+)
+
+cc_test(
+    name = "check_eventloop_udp",
+    srcs = [
+        "tests/check_eventloop_udp.c",
+    ],
+    includes = [
+        "deps",
+        "src",
+    ],
+    deps = [
+        ":eventloop_posix",
+        ":log_stdout",
+        ":open62541",
+        ":testing_clock",
+        "@libcheck//:check",
+    ],
+)
+
 #cc_test(
-#    name = "check_eventloop",
+#    name = "check_eventloop_eth",
 #    srcs = [
-#        "tests/check_eventloop.c",
+#        "tests/check_eventloop_eth.c",
 #    ],
 #    includes = [
 #        "deps",
 #        "src",
 #    ],
 #    deps = [
+#        ":eventloop_posix",
+#        ":log_stdout",
 #        ":open62541",
 #        ":testing_clock",
 #        "@libcheck//:check",

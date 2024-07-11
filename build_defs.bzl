@@ -89,6 +89,7 @@ def _generate_config_h_impl(ctx):
         "UA_ENABLE_SUBSCRIPTIONS",
         "UA_ENABLE_DISCOVERY_SEMAPHORE",
         "UA_ENABLE_DISCOVERY",
+        "UA_ENABLE_ENCRYPTION_OPENSSL",
     ]
 
     undefines = [
@@ -117,7 +118,6 @@ def _generate_config_h_impl(ctx):
         "UA_INFORMATION_MODEL_AUTOLOAD",
         "UA_ENABLE_ENCRYPTION_MBEDTLS",
         "UA_ENABLE_TPM2_SECURITY",
-        "UA_ENABLE_ENCRYPTION_OPENSSL",
         "UA_ENABLE_ENCRYPTION_LIBRESSL",
         "UA_ENABLE_SUBSCRIPTIONS_ALARMS_CONDITIONS",
         "UA_ENABLE_IMMUTABLE_NODES",
