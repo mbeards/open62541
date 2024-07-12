@@ -175,8 +175,8 @@ def _generate_datatypes_impl(ctx):
     if not ctx.attr.builtin:
         gen_args.add("--no-builtin")
 
-    if ctx.attr.gen_doc:
-        gen_args.add("--gen-doc")
+    #if ctx.attr.gen_doc:
+    #    gen_args.add("--gen-doc")
 
     # --internal
     gen_args.add_all(ctx.files.files_bsd, format_each = "--type-bsd=%s")
