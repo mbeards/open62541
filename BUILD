@@ -2,120 +2,135 @@ load("//:build_defs.bzl", "generate_config_h", "generate_datatypes", "generate_n
 
 cc_library(
     name = "open62541",
-    srcs = [
-        # Main Library
-        #${PROJECT_BINARY_DIR}/src_generated/open62541/transport_generated.h
-        "src/ua_types_encoding_binary.h",
-        "src/util/ua_util_internal.h",
-        "src/ua_securechannel.h",
-        "src/server/ua_session.h",
-        "src/server/ua_subscription.h",
+    srcs = glob([
+        "src/**/*.c",
+        "src/**/*.h",
+    ]) + [
+        "arch/posix/ua_architecture_functions.c",
+        "arch/posix/ua_clock.c",
         "plugins/ua_log_stdout.c",
-        "src/server/ua_discovery.h",
-        "src/pubsub/ua_pubsub_networkmessage.h",
-        "src/pubsub/ua_pubsub.h",
-        "src/pubsub/ua_pubsub_ns0.h",
-        "src/pubsub/ua_pubsub_keystorage.h",
-        "src/server/ua_services.h",
-        "src/server/ua_server_async.h",
-        "src/server/ua_server_internal.h",
-        "src/client/ua_client_internal.h",
-        "arch/clock.c",
-    ] + [
-        "src/ua_securechannel.c",
-        "src/ua_securechannel_crypto.c",
-        "src/ua_types.c",
-        "src/ua_types_encoding_binary.c",
-        "src/util/ua_util.c",
-    ] + [
-        # server
-        "src/server/ua_session.c",
-        "src/server/ua_discovery.c",
-        "src/server/ua_nodes.c",
-        "src/server/ua_server.c",
-        "src/server/ua_server_ns0.c",
-        "src/server/ua_server_ns0_diagnostics.c",
-        "src/server/ua_server_config.c",
-        "src/server/ua_server_binary.c",
-        "src/server/ua_server_utils.c",
-        "src/server/ua_server_async.c",
-        "src/server/ua_services.c",
-        "src/server/ua_services_view.c",
-        "src/server/ua_services_method.c",
-        "src/server/ua_services_session.c",
-        "src/server/ua_services_attribute.c",
-        "src/server/ua_services_discovery.c",
-        "src/server/ua_subscription.c",
-        "src/server/ua_subscription_eventfilter.c",
-        "plugins/crypto/ua_securitypolicy_none.c",
-        "plugins/crypto/ua_certificategroup_none.c",
-        "src/server/ua_subscription_datachange.c",
-        "src/server/ua_services_subscription.c",
-        "src/server/ua_services_monitoreditem.c",
-        "src/server/ua_services_securechannel.c",
-        "src/server/ua_services_nodemanagement.c",
-    ] + [
-        # pubsub
-        "src/pubsub/ua_pubsub_networkmessage.c",
-        "src/pubsub/ua_pubsub_eventloop.c",
-        "src/pubsub/ua_pubsub_connection.c",
-        "src/pubsub/ua_pubsub_dataset.c",
-        "src/pubsub/ua_pubsub_writer.c",
-        "src/pubsub/ua_pubsub_writergroup.c",
-        "src/pubsub/ua_pubsub_reader.c",
-        "src/pubsub/ua_pubsub_readergroup.c",
-        "src/pubsub/ua_pubsub_manager.c",
-        "src/pubsub/ua_pubsub_ns0.c",
-        "src/pubsub/ua_pubsub_keystorage.c",
-        "src/pubsub/ua_pubsub_securitygroup.c",
-        "src/pubsub/ua_pubsub_config.c",
-    ] + [
-        # client
-        "src/client/ua_client.c",
-        "src/client/ua_client_connect.c",
-        "src/client/ua_client_discovery.c",
-        "src/client/ua_client_highlevel.c",
-        "src/client/ua_client_subscriptions.c",
-    ] + [
-        "plugins/include/open62541/plugin/create_certificate.h",
-        ":include/open62541/statuscodes.c",
-    ] + glob([
-        "plugins/crypto/openssl/*.c",
-        "plugins/crypto/openssl/*.h",
-    ]),
-    hdrs = [
-        "include/open62541/common.h",
-        "include/open62541/types.h",
-        "include/open62541/plugin/log.h",
-        "include/open62541/util.h",
-        "include/open62541/plugin/accesscontrol.h",
-        "include/open62541/plugin/certificategroup.h",
-        "include/open62541/plugin/securitypolicy.h",
-        "include/open62541/plugin/eventloop.h",
-        "include/open62541/plugin/nodestore.h",
-        "include/open62541/plugin/historydatabase.h",
-        "plugins/include/open62541/client_config_default.h",
-        "plugins/include/open62541/plugin/securitypolicy_default.h",
-        "plugins/include/open62541/plugin/certificategroup_default.h",
-        "include/open62541/server_pubsub.h",
-        "include/open62541/pubsub.h",
-        "include/open62541/client.h",
-        "include/open62541/server.h",
-        "include/open62541/client_highlevel.h",
-        "include/open62541/client_subscriptions.h",
-        "include/open62541/client_highlevel_async.h",
-        ":config_h",
-        ":namespace0",
-        #":types",
-        #":transport",
-        #":include/open62541/nodeids.h",
-        ":nodeid_header",
-        ":include/open62541/statuscodes.h",
-        "plugins/include/open62541/plugin/log_stdout.h",
+        "plugins/ua_pubsub_udp.c",
     ],
+    #srcs = [
+    #    # Main Library
+    #    #${PROJECT_BINARY_DIR}/src_generated/open62541/transport_generated.h
+    #    "src/ua_types_encoding_binary.h",
+    #    "src/util/ua_util_internal.h",
+    #    "src/ua_securechannel.h",
+    #    "src/server/ua_session.h",
+    #    "src/server/ua_subscription.h",
+    #    "plugins/ua_log_stdout.c",
+    #    "src/server/ua_discovery.h",
+    #    "src/pubsub/ua_pubsub_networkmessage.h",
+    #    "src/pubsub/ua_pubsub.h",
+    #    "src/pubsub/ua_pubsub_ns0.h",
+    #    "src/pubsub/ua_pubsub_keystorage.h",
+    #    "src/server/ua_services.h",
+    #    "src/server/ua_server_async.h",
+    #    "src/server/ua_server_internal.h",
+    #    "src/client/ua_client_internal.h",
+    #    "arch/clock.c",
+    #] + [
+    #    "src/ua_securechannel.c",
+    #    "src/ua_securechannel_crypto.c",
+    #    "src/ua_types.c",
+    #    "src/ua_types_encoding_binary.c",
+    #    "src/util/ua_util.c",
+    #] + [
+    #    # server
+    #    "src/server/ua_session.c",
+    #    "src/server/ua_discovery.c",
+    #    "src/server/ua_nodes.c",
+    #    "src/server/ua_server.c",
+    #    "src/server/ua_server_ns0.c",
+    #    "src/server/ua_server_ns0_diagnostics.c",
+    #    "src/server/ua_server_config.c",
+    #    "src/server/ua_server_binary.c",
+    #    "src/server/ua_server_utils.c",
+    #    "src/server/ua_server_async.c",
+    #    "src/server/ua_services.c",
+    #    "src/server/ua_services_view.c",
+    #    "src/server/ua_services_method.c",
+    #    "src/server/ua_services_session.c",
+    #    "src/server/ua_services_attribute.c",
+    #    "src/server/ua_services_discovery.c",
+    #    "src/server/ua_subscription.c",
+    #    "src/server/ua_subscription_eventfilter.c",
+    #    "plugins/crypto/ua_securitypolicy_none.c",
+    #    "plugins/crypto/ua_certificategroup_none.c",
+    #    "src/server/ua_subscription_datachange.c",
+    #    "src/server/ua_services_subscription.c",
+    #    "src/server/ua_services_monitoreditem.c",
+    #    "src/server/ua_services_securechannel.c",
+    #    "src/server/ua_services_nodemanagement.c",
+    #] + [
+    #    # pubsub
+    #    "src/pubsub/ua_pubsub_networkmessage.c",
+    #    "src/pubsub/ua_pubsub_eventloop.c",
+    #    "src/pubsub/ua_pubsub_connection.c",
+    #    "src/pubsub/ua_pubsub_dataset.c",
+    #    "src/pubsub/ua_pubsub_writer.c",
+    #    "src/pubsub/ua_pubsub_writergroup.c",
+    #    "src/pubsub/ua_pubsub_reader.c",
+    #    "src/pubsub/ua_pubsub_readergroup.c",
+    #    "src/pubsub/ua_pubsub_manager.c",
+    #    "src/pubsub/ua_pubsub_ns0.c",
+    #    "src/pubsub/ua_pubsub_keystorage.c",
+    #    "src/pubsub/ua_pubsub_securitygroup.c",
+    #    "src/pubsub/ua_pubsub_config.c",
+    #] + [
+    #    # client
+    #    "src/client/ua_client.c",
+    #    "src/client/ua_client_connect.c",
+    #    "src/client/ua_client_discovery.c",
+    #    "src/client/ua_client_highlevel.c",
+    #    "src/client/ua_client_subscriptions.c",
+    #] + [
+    #    "plugins/include/open62541/plugin/create_certificate.h",
+    #    ":include/open62541/statuscodes.c",
+    #] + glob([
+    #    "plugins/crypto/openssl/*.c",
+    #    "plugins/crypto/openssl/*.h",
+    #]),
+    hdrs = glob(["include/**/*.h"]) + [
+        "plugins/include/open62541/plugin/log_stdout.h",
+        "plugins/include/open62541/plugin/pubsub_udp.h",
+        ":namespace0",
+    ],
+    #hdrs = [
+    #    "include/open62541/common.h",
+    #    "include/open62541/types.h",
+    #    "include/open62541/plugin/log.h",
+    #    "include/open62541/util.h",
+    #    "include/open62541/plugin/accesscontrol.h",
+    #    "include/open62541/plugin/certificategroup.h",
+    #    "include/open62541/plugin/securitypolicy.h",
+    #    "include/open62541/plugin/eventloop.h",
+    #    "include/open62541/plugin/nodestore.h",
+    #    "include/open62541/plugin/historydatabase.h",
+    #    "plugins/include/open62541/client_config_default.h",
+    #    "plugins/include/open62541/plugin/securitypolicy_default.h",
+    #    "plugins/include/open62541/plugin/certificategroup_default.h",
+    #    "include/open62541/server_pubsub.h",
+    #    "include/open62541/pubsub.h",
+    #    "include/open62541/client.h",
+    #    "include/open62541/server.h",
+    #    "include/open62541/client_highlevel.h",
+    #    "include/open62541/client_subscriptions.h",
+    #    "include/open62541/client_highlevel_async.h",
+    #    ":config_h",
+    #    ":namespace0",
+    #    #":types",
+    #    #":transport",
+    #    #":include/open62541/nodeids.h",
+    #    ":nodeid_header",
+    #    ":include/open62541/statuscodes.h",
+    #    "plugins/include/open62541/plugin/log_stdout.h",
+    #],
     copts = [
         "-Isrc/util",
         "-Isrc/server",
+        "-Isrc/client",
         "-Isrc",
         "-Ideps",
         "-Isrc/pubsub",
@@ -125,18 +140,19 @@ cc_library(
     ],
     includes = ["include"],
     deps = [
+        ":aa_tree",
         ":base64",
-        ":cj5",
-        ":dtoa",
+        #":cj5",
+        ":atoi",
         ":itoa",
         ":libc_time",
-        ":mp_printf",
         ":open62541_queue",
-        ":parse_num",
         ":pcg_basic",
         ":transport",
         ":types",
         ":ziptree",
+        ":jsmn",
+        ":string_escape",
         "@boringssl//:crypto",
     ],
 )
@@ -149,23 +165,24 @@ cc_library(
 )
 
 cc_library(
+    name = "jsmn",
+    srcs = ["deps/jsmn/jsmn.c"],
+    hdrs = ["deps/jsmn/jsmn.h"],
+    includes = ["deps/jsmn"],
+)
+
+cc_library(
     name = "pcg_basic",
     srcs = ["deps/pcg_basic.c"],
     hdrs = ["deps/pcg_basic.h"],
     includes = ["deps"],
+    deps = [":common"],
 )
 
 cc_library(
     name = "libc_time",
     srcs = ["deps/libc_time.c"],
     hdrs = ["deps/libc_time.h"],
-    includes = ["deps"],
-)
-
-cc_library(
-    name = "parse_num",
-    srcs = ["deps/parse_num.c"],
-    hdrs = ["deps/parse_num.h"],
     includes = ["deps"],
 )
 
@@ -180,20 +197,11 @@ cc_library(
 )
 
 cc_library(
-    name = "cj5",
-    srcs = ["deps/cj5.c"],
-    hdrs = ["deps/cj5.h"],
+    name = "atoi",
+    srcs = ["deps/atoi.c"],
+    hdrs = ["deps/atoi.h"],
     includes = ["deps"],
-    deps = [
-        ":parse_num",
-    ],
-)
-
-cc_library(
-    name = "dtoa",
-    srcs = ["deps/dtoa.c"],
-    hdrs = ["deps/dtoa.h"],
-    includes = ["deps"],
+    deps = [":types"],
 )
 
 cc_library(
@@ -210,11 +218,18 @@ cc_library(
 )
 
 cc_library(
-    name = "mp_printf",
-    srcs = ["deps/mp_printf.c"],
-    hdrs = ["deps/mp_printf.h"],
+    name = "aa_tree",
+    srcs = ["deps/aa_tree.c"],
+    hdrs = ["deps/aa_tree.h"],
     includes = ["deps"],
-    deps = [":dtoa"],
+)
+
+cc_library(
+    name = "string_escape",
+    srcs = ["deps/string_escape.c"],
+    hdrs = ["deps/string_escape.h"],
+    includes = ["deps"],
+    deps = [":common"],
 )
 
 #"deps/mp_printf.h",
@@ -222,12 +237,21 @@ cc_library(
 cc_library(
     name = "common",
     hdrs = [
+        "arch/posix/ua_architecture.h",
+        "include/open62541/architecture_definitions.h",
+        "include/open62541/architecture_functions.h",
         "include/open62541/common.h",
         ":config_h",
         ":include/open62541/nodeids.h",
     ],
-    defines = ["HAVE_CONFIG_H"],
-    includes = ["include"],
+    defines = [
+        "HAVE_CONFIG_H",
+        "UA_ARCHITECTURE_POSIX",
+    ],
+    includes = [
+        "arch",
+        "include",
+    ],
 )
 
 py_binary(
@@ -353,19 +377,19 @@ cc_test(
     ],
 )
 
-cc_test(
-    name = "check_cj5",
-    srcs = ["tests/check_cj5.c"],
-    includes = [
-        "deps",
-        "src",
-    ],
-    deps = [
-        ":cj5",
-        ":types",
-        "@libcheck//:check",
-    ],
-)
+#cc_test(
+#    name = "check_cj5",
+#    srcs = ["tests/check_cj5.c"],
+#    includes = [
+#        "deps",
+#        "src",
+#    ],
+#    deps = [
+#        ":cj5",
+#        ":types",
+#        "@libcheck//:check",
+#    ],
+#)
 
 cc_library(
     name = "testing_clock",
@@ -388,10 +412,10 @@ cc_library(
         "arch/eventloop_posix/*.c",
         "arch/eventloop_posix/*.h",
     ]) + [
-        "arch/eventloop_common/eventloop_common.c",
-        "arch/eventloop_common/eventloop_common.h",
-        "arch/eventloop_common/timer.c",
-        "arch/eventloop_common/timer.h",
+        #"arch/eventloop_common/eventloop_common.c",
+        #"arch/eventloop_common/eventloop_common.h",
+        #"arch/eventloop_common/timer.c",
+        #"arch/eventloop_common/timer.h",
     ],
     hdrs = ["include/open62541/plugin/eventloop.h"],
     deps = [
@@ -401,22 +425,22 @@ cc_library(
     ],
 )
 
-cc_test(
-    name = "check_eventloop",
-    srcs = [
-        "tests/check_eventloop.c",
-    ],
-    includes = [
-        "deps",
-        "src",
-    ],
-    deps = [
-        ":eventloop_posix",
-        ":open62541",
-        ":testing_clock",
-        "@libcheck//:check",
-    ],
-)
+#cc_test(
+#    name = "check_eventloop",
+#    srcs = [
+#        "tests/check_eventloop.c",
+#    ],
+#    includes = [
+#        "deps",
+#        "src",
+#    ],
+#    deps = [
+#        ":eventloop_posix",
+#        ":open62541",
+#        ":testing_clock",
+#        "@libcheck//:check",
+#    ],
+#)
 
 cc_library(
     name = "log_stdout",
@@ -431,59 +455,59 @@ cc_library(
     ],
 )
 
-cc_test(
-    name = "check_eventloop_interrupt",
-    srcs = [
-        "tests/check_eventloop_interrupt.c",
-    ],
-    includes = [
-        "deps",
-        "src",
-    ],
-    deps = [
-        ":eventloop_posix",
-        ":log_stdout",
-        ":open62541",
-        ":testing_clock",
-        "@libcheck//:check",
-    ],
-)
-
-cc_test(
-    name = "check_eventloop_tcp",
-    srcs = [
-        "tests/check_eventloop_tcp.c",
-    ],
-    includes = [
-        "deps",
-        "src",
-    ],
-    deps = [
-        ":eventloop_posix",
-        ":log_stdout",
-        ":open62541",
-        ":testing_clock",
-        "@libcheck//:check",
-    ],
-)
-
-cc_test(
-    name = "check_eventloop_udp",
-    srcs = [
-        "tests/check_eventloop_udp.c",
-    ],
-    includes = [
-        "deps",
-        "src",
-    ],
-    deps = [
-        ":eventloop_posix",
-        ":log_stdout",
-        ":open62541",
-        ":testing_clock",
-        "@libcheck//:check",
-    ],
-)
+#cc_test(
+#    name = "check_eventloop_interrupt",
+#    srcs = [
+#        "tests/check_eventloop_interrupt.c",
+#    ],
+#    includes = [
+#        "deps",
+#        "src",
+#    ],
+#    deps = [
+#        ":eventloop_posix",
+#        ":log_stdout",
+#        ":open62541",
+#        ":testing_clock",
+#        "@libcheck//:check",
+#    ],
+#)
+#
+#cc_test(
+#    name = "check_eventloop_tcp",
+#    srcs = [
+#        "tests/check_eventloop_tcp.c",
+#    ],
+#    includes = [
+#        "deps",
+#        "src",
+#    ],
+#    deps = [
+#        ":eventloop_posix",
+#        ":log_stdout",
+#        ":open62541",
+#        ":testing_clock",
+#        "@libcheck//:check",
+#    ],
+#)
+#
+#cc_test(
+#    name = "check_eventloop_udp",
+#    srcs = [
+#        "tests/check_eventloop_udp.c",
+#    ],
+#    includes = [
+#        "deps",
+#        "src",
+#    ],
+#    deps = [
+#        ":eventloop_posix",
+#        ":log_stdout",
+#        ":open62541",
+#        ":testing_clock",
+#        "@libcheck//:check",
+#    ],
+#)
 
 #cc_test(
 #    name = "check_eventloop_eth",
@@ -502,13 +526,3 @@ cc_test(
 #        "@libcheck//:check",
 #    ],
 #)
-
-cc_test(
-    name = "check_ziptree",
-    srcs = ["tests/check_ziptree.c"],
-    includes = ["deps"],
-    deps = [
-        ":ziptree",
-        "@libcheck//:check",
-    ],
-)

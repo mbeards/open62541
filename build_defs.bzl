@@ -80,20 +80,31 @@ def _generate_config_h_impl(ctx):
         "#cmakedefine UA_ARCHITECTURE_POSIX": "#define UA_ARCHITECTURE_POSIX 1",
         "${UA_LOGLEVEL}": "0",
         "${UA_MULTITHREADING}": "100",
+        "${UA_ARCHITECTURES_NODEF}": "0",
+        "${UA_ARCHITECTURE}": "posix",
     }
 
     defines = [
         "UA_ENABLE_METHODCALLS",
+        "UA_ENABLE_PUBSUB_ENCRYPTION",
         "UA_ENABLE_PUBSUB",
         "UA_ENABLE_SUBSCRIPTIONS_EVENTS",
         "UA_ENABLE_SUBSCRIPTIONS",
         "UA_ENABLE_DISCOVERY_SEMAPHORE",
         "UA_ENABLE_DISCOVERY",
         "UA_ENABLE_ENCRYPTION_OPENSSL",
+        "UA_ENABLE_MALLOC_SINGLETON",
+        "UA_ENABLE_TYPEDESCRIPTION",
+        "UA_ENABLE_JSON_ENCODING",
     ]
 
     undefines = [
         "UA_ENABLE_DISCOVERY_MULTICAST",
+        "UA_ENABLE_EXPERIMENTAL_HISTORIZING",
+        "UA_ENABLE_WEBSOCKET_SERVER",
+        "UA_ENABLE_UNIT_TEST_FAILURE_HOOKS",
+        "UA_ENABLE_VALGRIND_INTERACTIVE",
+        "UA_PACK_DEBIAN",
         "UA_ENABLE_AMALGAMATION",
         "UA_DEBUG",
         "UA_DEBUG_DUMP_PKGS",
@@ -104,14 +115,15 @@ def _generate_config_h_impl(ctx):
         "UA_ENABLE_DIAGNOSTICS",
         "UA_ENABLE_HISTORIZING",
         "UA_ENABLE_PARSING",
-        "UA_ENABLE_PUBSUB_ENCRYPTION",
+        "UA_ENABLE_PUBSUB_ETH_UADP",
+        "UA_ENABLE_PUBSUB_DELTAFRAMES",
+        "UA_ENABLE_PUBSUB_MQTT",
         "UA_ENABLE_PUBSUB_FILE_CONFIG",
         "UA_ENABLE_PUBSUB_INFORMATIONMODEL",
         "UA_ENABLE_PUBSUB_MONITORING",
         "UA_ENABLE_PUBSUB_BUFMALLOC",
         "UA_ENABLE_PUBSUB_SKS",
         "UA_ENABLE_SUBSCRIPTION_EVENTS",
-        "UA_ENABLE_JSON_ENCODING",
         "UA_ENABLE_XML_ENCODING",
         "UA_ENABLE_MQTT",
         "UA_ENABLE_NODESET_INJECTOR",
@@ -122,12 +134,10 @@ def _generate_config_h_impl(ctx):
         "UA_ENABLE_SUBSCRIPTIONS_ALARMS_CONDITIONS",
         "UA_ENABLE_IMMUTABLE_NODES",
         "UA_ENABLE_STATUSCODE_DESCRIPTIONS",
-        "UA_ENABLE_TYPEDESCRIPTION",
         "UA_ENABLE_INLINABLE_EXPORT",
         "UA_ENABLE_NODESET_COMPILER_DESCRIPTIONS",
         "UA_ENABLE_DETERMINISTIC_RNG",
         "UA_ENABLE_QUERY",
-        "UA_ENABLE_MALLOC_SINGLETON",
         "UA_GENERATED_NAMESPACE_ZERO_FULL",
         "UA_GENERATED_NAMESPACE_ZERO",
     ]
@@ -163,6 +173,7 @@ def _generate_datatypes_impl(ctx):
 
     c_file = ctx.actions.declare_file(ctx.attr.prefix + "/" + file_suffix + ".c")
     h_file = ctx.actions.declare_file(ctx.attr.prefix + "/" + file_suffix + ".h")
+    handling_h_file = ctx.actions.declare_file(ctx.attr.prefix + "/" + file_suffix + "_handling.h")
 
     #if ctx.attr.gen_doc:
     #    doc_file = ctx.actions.declare_file("foo.rst")
@@ -191,7 +202,7 @@ def _generate_datatypes_impl(ctx):
     print(gen_args)
     ctx.actions.run(
         executable = ctx.executable._generate_datatypes,
-        outputs = [c_file, h_file],
+        outputs = [c_file, h_file, handling_h_file],
         inputs = depset(all_inputs),
         arguments = [gen_args],
     )
@@ -208,8 +219,8 @@ def _generate_datatypes_impl(ctx):
         actions = ctx.actions,
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
-        srcs = [c_file],
-        public_hdrs = [h_file, ctx.file._types_hdr, ctx.file._statuscodes_hdr],
+        srcs = [c_file, ctx.file._statuscodes_src],
+        public_hdrs = [h_file, handling_h_file, ctx.file._types_hdr, ctx.file._statuscodes_hdr],
         compilation_contexts = [ctx.attr._common_lib[CcInfo].compilation_context] + [dep[CcInfo].compilation_context for dep in ctx.attr.deps],
     )
 
@@ -246,6 +257,7 @@ generate_datatypes = rule(
         "_common_lib": attr.label(default = "//:common"),
         "_types_hdr": attr.label(allow_single_file = True, default = "//:include/open62541/types.h"),
         "_statuscodes_hdr": attr.label(allow_single_file = True, default = "//:include/open62541/statuscodes.h"),
+        "_statuscodes_src": attr.label(allow_single_file = True, default = "//:include/open62541/statuscodes.c"),
     },
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
     fragments = ["cpp"],

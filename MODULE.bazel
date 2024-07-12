@@ -3,7 +3,7 @@ bazel_dep(
 )
 local_path_override(
     module_name = "libcheck",
-    path = "/usr/local/google/home/beardsworth/src/check",
+    path = "../check",
 )
 
 bazel_dep(name = "boringssl", version = "0.0.0-20240530-2db0eb3")
